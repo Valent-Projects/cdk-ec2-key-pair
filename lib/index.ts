@@ -13,7 +13,7 @@ import {
   TagType,
 } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import path = require('path');
+import * as path from 'path';
 
 const resourceType = 'Custom::EC2-Key-Pair';
 const ID = `CFN::Resource::${resourceType}`;
@@ -204,13 +204,6 @@ export class KeyPair extends Construct implements ITaggable {
     }
 
     const stack = Stack.of(this).stackName;
-    this.prefix = props.resourcePrefix ?? stack;
-    if (this.prefix.length + cleanID.length > 62)
-      // Cloudformation limits names to 63 characters.
-      Annotations.of(this).addError(
-        `Cloudformation limits names to 63 characters.
-         Prefix ${this.prefix} is too long to be used as a prefix for your roleName. Define parameter resourcePrefix?:`
-      );
     this.lambda = this.ensureLambda();
 
     this.tags = new TagManager(TagType.MAP, 'Custom::EC2-Key-Pair');
@@ -365,9 +358,7 @@ export class KeyPair extends Construct implements ITaggable {
     });
 
     const fn = new aws_lambda.Function(stack, constructName, {
-      functionName: `${this.prefix}-${cleanID}`,
-      role: role,
-      description: 'Custom CFN resource: Manage EC2 Key Pairs',
+      description: `${this.prefix}-${cleanID} Custom CFN resource: Manage EC2 Key Pairs`,
       runtime: aws_lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
       code: aws_lambda.Code.fromAsset(
